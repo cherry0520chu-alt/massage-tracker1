@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>每天按摩紀錄</title>
+  <meta name="theme-color" content="#2563EB">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="按摩紀錄">
+  
+  <style>
+    :root {
+      --primary: #2563EB;
+      --primary-hover: #1D4ED8;
+      --bg: #F8FAFC;
+      --card-bg: #FFFFFF;
+      --text: #1E293B;
+      --text-muted: #64748B;
+      --border: #E2E8F0;
+      --badge-bg: #EFF6FF;
+      --badge-text: #1D4ED8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    .app-container {
+      width: 100%;
+      max-width: 440px;
+      background: var(--card-bg);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    }
+
+    /* 頂部導覽列 */
+    header {
+      background: var(--primary);
+      color: #FFFFFF;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .header-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      background-color: #22C55E;
+      border-radius: 50%;
+      display: inline-block;
+      box-shadow: 0 0 6px rgba(34, 197, 94, 0.6);
+    }
+
+    .btn-export {
+      background: rgba(255, 255, 255, 0.18);
+      color: #FFFFFF;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .btn-export:active {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    /* 內容主體 */
+    main {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      flex: 1;
+    }
+
+    .section-label {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    /* 日期選擇列 */
+    .date-selector {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nav-btn {
+      background: #FFFFFF;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      color: var(--text);
+      cursor: pointer;
+    }
+
+    .nav-btn:active {
+      background: #F1F5F9;
+    }
+
+    .date-display {
+      flex: 1;
+      height: 44px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 1rem;
+      background: #FFFFFF;
+    }
+
+    /* 打卡主按鈕 */
+    .btn-checkin {
+      background: var(--primary);
+      color: #FFFFFF;
+      border: none;
+      height: 50px;
+      border-radius: 12px;
+      font-size: 1.05rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+      transition: all 0.15s ease;
+    }
+
+    .btn-checkin:active {
+      background: var(--primary-hover);
+      transform: scale(0.99);
+    }
+
+    .btn-checkin.checked {
+      background: #E2E8F0;
+      color: #475569;
+      box-shadow: none;
+    }
+
+    hr.divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 2px 0;
+    }
+
+    /* 月曆區塊標頭 */
+    .calendar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .month-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .badge-count {
+      background: var(--badge-bg);
+      color: var(--badge-text);
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    /* 月曆表格 */
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+      text-align: center;
+    }
+
+    .weekday {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      padding: 8px 0;
+    }
+
+    .day-cell {
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.95rem;
+      font-weight: 500;
+      border-radius: 50%;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .day-cell.empty {
+      cursor: default;
+    }
+
+    .day-cell.selected {
+      outline: 2px solid var(--primary);
+      outline-offset: -2px;
+      font-weight: 700;
+    }
+
+    .day-cell.checked {
+      background-color: var(--primary);
+      color: #FFFFFF;
+      font-weight: 700;
+    }
+
+    .day-cell.checked.selected {
+      outline: 2px solid #1D4ED8;
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.4);
+    }
+
+    /* 底部圖例 */
+    .legend {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: auto;
+      padding: 16px 0 10px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .legend-icon-dot {
+      width: 14px;
+      height: 14px;
+      background: var(--primary);
+      border-radius: 50%;
+    }
+
+    .legend-icon-square {
+      width: 14px;
+      height: 14px;
+      border: 2px solid var(--primary);
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="app-container">
+  <header>
+    <div class="header-title">
+      每天按摩紀錄
+      <span class="status-dot"></span>
+    </div>
+    <button class="btn-export" onclick="exportData()">⭳ Export</button>
+  </header>
+
+  <main>
+    <div class="section-label">選擇日期</div>
+    <div class="date-selector">
+      <button class="nav-btn" onclick="changeDate(-1)">‹</button>
+      <div class="date-display" id="dateDisplay">--</div>
+      <button class="nav-btn" onclick="changeDate(1)">›</button>
+    </div>
+
+    <button class="btn-checkin" id="checkinBtn" onclick="toggleCheckIn()">打卡記錄</button>
+
+    <hr class="divider">
+
+    <div class="calendar-header">
+      <div class="month-title" id="monthTitle">--</div>
+      <div class="badge-count" id="monthBadge">本月打卡 0 天</div>
+    </div>
+
+    <div class="calendar-grid" id="calendarGrid">
+      <!-- 星期標頭 -->
+      <div class="weekday">日</div>
+      <div class="weekday">一</div>
+      <div class="weekday">二</div>
+      <div class="weekday">三</div>
+      <div class="weekday">四</div>
+      <div class="weekday">五</div>
+      <div class="weekday">六</div>
+      <!-- 日期格子由 JS 生成 -->
+    </div>
+
+    <div class="legend">
+      <div class="legend-item">
+        <span class="legend-icon-dot"></span>
+        <span>已按摩打卡</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-icon-square"></span>
+        <span>目前選取日期</span>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+  const STORAGE_KEY = 'massage_checkin_records';
+  let records = new Set(JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'));
+  let currentDate = new Date();
+
+  const weekdays = ['週日', '週一', '週二', '週三', '週四', '週五', '週六'];
+
+  function formatDateKey(d) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+
+  function updateUI() {
+    const key = formatDateKey(currentDate);
+    const y = currentDate.getFullYear();
+    const m = currentDate.getMonth() + 1;
+    const d = currentDate.getDate();
+    const w = weekdays[currentDate.getDay()];
+
+    // 頂部日期條
+    document.getElementById('dateDisplay').textContent = `${y}年${m}月${d}日  ${w}`;
+
+    // 打卡按鈕狀態
+    const btn = document.getElementById('checkinBtn');
+    if (records.has(key)) {
+      btn.textContent = '✓ 今日已完成打卡 (點擊取消)';
+      btn.classList.add('checked');
+    } else {
+      btn.textContent = '打卡記錄';
+      btn.classList.remove('checked');
+    }
+
+    renderCalendar(currentDate);
+  }
+
+  function renderCalendar(viewDate) {
+    const year = viewDate.getFullYear();
+    const month = viewDate.getMonth(); // 0-based
+
+    document.getElementById('monthTitle').textContent = `${year}年 ${month + 1}月`;
+
+    // 計算本月打卡天數
+    const monthPrefix = `${year}-${String(month + 1).padStart(2, '0')}`;
+    let monthCount = 0;
+    records.forEach(k => {
+      if (k.startsWith(monthPrefix)) monthCount++;
+    });
+    document.getElementById('monthBadge').textContent = `本月打卡 ${monthCount} 天`;
+
+    // 清除舊日期
+    const grid = document.getElementById('calendarGrid');
+    while (grid.children.length > 7) {
+      grid.removeChild(grid.lastChild);
+    }
+
+    const firstDayIndex = new Date(year, month, 1).getDay();
+    const totalDays = new Date(year, month + 1, 0).getDate();
+    const selectedKey = formatDateKey(currentDate);
+
+    // 填充 1 號之前的空格
+    for (let i = 0; i < firstDayIndex; i++) {
+      const emptyCell = document.createElement('div');
+      emptyCell.className = 'day-cell empty';
+      grid.appendChild(emptyCell);
+    }
+
+    // 填充日期
+    for (let day = 1; day <= totalDays; day++) {
+      const cell = document.createElement('div');
+      cell.className = 'day-cell';
+      cell.textContent = day;
+
+      const cellKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+      if (records.has(cellKey)) {
+        cell.classList.add('checked');
+      }
+      if (cellKey === selectedKey) {
+        cell.classList.add('selected');
+      }
+
+      cell.onclick = () => {
+        currentDate = new Date(year, month, day);
+        updateUI();
+      };
+
+      grid.appendChild(cell);
+    }
+  }
+
+  function toggleCheckIn() {
+    const key = formatDateKey(currentDate);
+    if (records.has(key)) {
+      records.delete(key);
+    } else {
+      records.add(key);
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(records)));
+    updateUI();
+  }
+
+  function changeDate(days) {
+    currentDate.setDate(currentDate.getDate() + days);
+    updateUI();
+  }
+
+  function exportData() {
+    const sorted = Array.from(records).sort();
+    let csv = '\uFEFF打卡日期,備註\n';
+    sorted.forEach(d => {
+      csv += `${d},已按摩\n`;
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `massage_records_${formatDateKey(new Date())}.csv`;
+    link.click();
+  }
+
+  // 初始化
+  updateUI();
+</script>
+</body>
+</html>
